@@ -17,13 +17,23 @@ const SISTEMAS_CRISTALINOS = ["Cúbico", "Tetragonal", "Ortorrômbico", "Hexagon
 const BRILHOS = ["Vítreo", "Metálico", "Adamantino", "Resinoso", "Gorduroso", "Sedoso", "Nacarado", "Fosco", "Terroso"];
 const TRANSPARENCIAS = ["Transparente", "Translúcido", "Opaco"];
 const CLIVAGENS = ["Perfeita", "Boa", "Regular", "Imperfeita", "Ausente"];
-const FRATURAS = ["Concoidal", "Irregular", "Fibrosa", "Ganchosa", "Terrosa"];
+const FRATURAS = ["Conchoidal", "Irregular", "Fibrosa", "Ganchosa", "Terrosa"];
 const TENACIDADES = ["Frágil", "Maleável", "Séctil", "Dúctil", "Flexível", "Elástico"];
 const ESTADOS_CONSERVACAO = ["Excelente", "Bom", "Regular", "Danificado"];
 const TIPOS_ROCHA = ["Ígnea", "Sedimentar", "Metamórfica"];
 const GRANULACOES = ["Afanítica (fina)", "Fanerítica (grossa)", "Vítrea", "Porfirítica", "Criptocristalina"];
 const TEXTURAS_ROCHA = ["Granular", "Foliada", "Bandada", "Maciça", "Vesicular", "Clástica"];
 const ESTADOS_BR = ["AC","AL","AP","AM","BA","CE","DF","ES","GO","MA","MT","MS","MG","PA","PB","PR","PE","PI","RJ","RN","RS","RO","RR","SC","SP","SE","TO"];
+
+// Campos específicos por tipo de rocha (cada tipo se analisa de um jeito diferente)
+const INDICE_COR_IGNEA = ["Félsica (clara)", "Intermediária", "Máfica (escura)", "Ultramáfica"];
+const CLASSIFICACAO_IGNEA = ["Plutônica (intrusiva)", "Vulcânica (extrusiva)", "Hipabissal"];
+const TIPO_SEDIMENTAR = ["Clástica (detrítica)", "Química", "Bioquímica / Orgânica"];
+const SELECIONAMENTO_SED = ["Bom", "Moderado", "Pobre"];
+const ARREDONDAMENTO_SED = ["Anguloso", "Subanguloso", "Subarredondado", "Arredondado", "Bem arredondado"];
+const TIPO_METAMORFISMO = ["Regional", "Contato (termal)", "Dinâmico (cataclástico)", "Hidrotermal"];
+const GRAU_METAMORFICO = ["Baixo grau", "Médio grau", "Alto grau"];
+const FOLIACAO_OPCOES = ["Foliada", "Não foliada"];
 
 const MOHS_REF = [
   { d: 1, m: "Talco" }, { d: 2, m: "Gipsita" }, { d: 3, m: "Calcita" }, { d: 4, m: "Fluorita" },
@@ -46,6 +56,12 @@ const emptyMineral = () => ({
 const emptyRocha = () => ({
   id: "", codigo: "", nome: "", tipoRocha: "",
   cor: "", granulacao: "", textura: "", estrutura: "", mineralogiaPrincipal: "", mineralogiaSecundaria: "",
+  // Específicos — Ígnea
+  indiceCorIgnea: "", classificacaoIgnea: "",
+  // Específicos — Sedimentar
+  tipoSedimentar: "", cimentoMatriz: "", selecionamento: "", arredondamento: "", presencaFosseis: "",
+  // Específicos — Metamórfica
+  tipoMetamorfismo: "", grauMetamorfico: "", foliacao: "", rochaOriginal: "", mineraisIndice: "",
   ambienteFormacao: "", idadeGeologica: "", origem: "",
   usoIndustrial: "", usoOrnamental: "", usoConstrucao: "",
   procedencia: "", municipio: "", estado: "", pais: "Brasil",
@@ -140,6 +156,34 @@ function mineralToXML(m) {
   </mineral>`;
 }
 
+function rochaEspecificoXML(r) {
+  if (r.tipoRocha === "Ígnea") {
+    return `    <especificoIgnea>
+        <indiceCor>${escXML(r.indiceCorIgnea)}</indiceCor>
+        <classificacao>${escXML(r.classificacaoIgnea)}</classificacao>
+    </especificoIgnea>\n`;
+  }
+  if (r.tipoRocha === "Sedimentar") {
+    return `    <especificoSedimentar>
+        <tipo>${escXML(r.tipoSedimentar)}</tipo>
+        <cimentoMatriz>${escXML(r.cimentoMatriz)}</cimentoMatriz>
+        <selecionamento>${escXML(r.selecionamento)}</selecionamento>
+        <arredondamento>${escXML(r.arredondamento)}</arredondamento>
+        <presencaFosseis>${escXML(r.presencaFosseis)}</presencaFosseis>
+    </especificoSedimentar>\n`;
+  }
+  if (r.tipoRocha === "Metamórfica") {
+    return `    <especificoMetamorfica>
+        <tipoMetamorfismo>${escXML(r.tipoMetamorfismo)}</tipoMetamorfismo>
+        <grauMetamorfico>${escXML(r.grauMetamorfico)}</grauMetamorfico>
+        <foliacao>${escXML(r.foliacao)}</foliacao>
+        <rochaOriginal>${escXML(r.rochaOriginal)}</rochaOriginal>
+        <mineraisIndice>${escXML(r.mineraisIndice)}</mineraisIndice>
+    </especificoMetamorfica>\n`;
+  }
+  return "";
+}
+
 function rochaToXML(r) {
   return `  <rocha>
     <codigo>${escXML(r.codigo)}</codigo>
@@ -151,7 +195,7 @@ function rochaToXML(r) {
     <estrutura>${escXML(r.estrutura)}</estrutura>
     <mineralogiaPrincipal>${escXML(r.mineralogiaPrincipal)}</mineralogiaPrincipal>
     <mineralogiaSecundaria>${escXML(r.mineralogiaSecundaria)}</mineralogiaSecundaria>
-    <formacao>
+${rochaEspecificoXML(r)}    <formacao>
         <ambienteFormacao>${escXML(r.ambienteFormacao)}</ambienteFormacao>
         <idadeGeologica>${escXML(r.idadeGeologica)}</idadeGeologica>
         <origem>${escXML(r.origem)}</origem>
@@ -1412,6 +1456,46 @@ function RochaFormModal({ data, onClose, onSave, auth }) {
           <Field label="Mineralogia secundária"><input style={S.input} value={f.mineralogiaSecundaria} onChange={set("mineralogiaSecundaria")} /></Field>
         </div>
 
+        {!f.tipoRocha && (
+          <div style={S.tipoHint}><AlertCircle size={14} /> Selecione o "Tipo" na Identificação acima para ver os campos específicos de análise dessa rocha.</div>
+        )}
+
+        {f.tipoRocha === "Ígnea" && (
+          <>
+            <SectionTitle icon={Mountain}>Específico de Rocha Ígnea</SectionTitle>
+            <div style={S.formGrid3}>
+              <Field label="Índice de cor"><select style={S.input} value={f.indiceCorIgnea} onChange={set("indiceCorIgnea")}><option value="">Selecione…</option>{INDICE_COR_IGNEA.map((g) => <option key={g}>{g}</option>)}</select></Field>
+              <Field label="Classificação"><select style={S.input} value={f.classificacaoIgnea} onChange={set("classificacaoIgnea")}><option value="">Selecione…</option>{CLASSIFICACAO_IGNEA.map((g) => <option key={g}>{g}</option>)}</select></Field>
+            </div>
+          </>
+        )}
+
+        {f.tipoRocha === "Sedimentar" && (
+          <>
+            <SectionTitle icon={Mountain}>Específico de Rocha Sedimentar</SectionTitle>
+            <div style={S.formGrid3}>
+              <Field label="Tipo sedimentar"><select style={S.input} value={f.tipoSedimentar} onChange={set("tipoSedimentar")}><option value="">Selecione…</option>{TIPO_SEDIMENTAR.map((g) => <option key={g}>{g}</option>)}</select></Field>
+              <Field label="Cimento / matriz"><input style={S.input} value={f.cimentoMatriz} onChange={set("cimentoMatriz")} placeholder="Ex: sílica, calcita, argila…" /></Field>
+              <Field label="Selecionamento"><select style={S.input} value={f.selecionamento} onChange={set("selecionamento")}><option value="">Selecione…</option>{SELECIONAMENTO_SED.map((g) => <option key={g}>{g}</option>)}</select></Field>
+              <Field label="Arredondamento"><select style={S.input} value={f.arredondamento} onChange={set("arredondamento")}><option value="">Selecione…</option>{ARREDONDAMENTO_SED.map((g) => <option key={g}>{g}</option>)}</select></Field>
+              <Field label="Presença de fósseis"><select style={S.input} value={f.presencaFosseis} onChange={set("presencaFosseis")}><option value="">Selecione…</option><option>Sim</option><option>Não</option></select></Field>
+            </div>
+          </>
+        )}
+
+        {f.tipoRocha === "Metamórfica" && (
+          <>
+            <SectionTitle icon={Mountain}>Específico de Rocha Metamórfica</SectionTitle>
+            <div style={S.formGrid3}>
+              <Field label="Tipo de metamorfismo"><select style={S.input} value={f.tipoMetamorfismo} onChange={set("tipoMetamorfismo")}><option value="">Selecione…</option>{TIPO_METAMORFISMO.map((g) => <option key={g}>{g}</option>)}</select></Field>
+              <Field label="Grau metamórfico"><select style={S.input} value={f.grauMetamorfico} onChange={set("grauMetamorfico")}><option value="">Selecione…</option>{GRAU_METAMORFICO.map((g) => <option key={g}>{g}</option>)}</select></Field>
+              <Field label="Foliação"><select style={S.input} value={f.foliacao} onChange={set("foliacao")}><option value="">Selecione…</option>{FOLIACAO_OPCOES.map((g) => <option key={g}>{g}</option>)}</select></Field>
+              <Field label="Rocha original (protólito)"><input style={S.input} value={f.rochaOriginal} onChange={set("rochaOriginal")} placeholder="Ex: granito, folhelho…" /></Field>
+              <Field label="Minerais índice"><input style={S.input} value={f.mineraisIndice} onChange={set("mineraisIndice")} placeholder="Ex: granada, cianita…" /></Field>
+            </div>
+          </>
+        )}
+
         <SectionTitle icon={FileText}>Formação</SectionTitle>
         <div style={S.formGrid3}>
           <Field label="Ambiente de formação"><input style={S.input} value={f.ambienteFormacao} onChange={set("ambienteFormacao")} /></Field>
@@ -1508,6 +1592,9 @@ function FichaModal({ item, onClose, onEdit, onExportXML }) {
           ) : (
             <>
               <FichaGrupo titulo="Características" campos={[["Cor", item.cor], ["Granulação", item.granulacao], ["Textura", item.textura], ["Estrutura", item.estrutura], ["Mineralogia principal", item.mineralogiaPrincipal], ["Mineralogia secundária", item.mineralogiaSecundaria]]} />
+              {item.tipoRocha === "Ígnea" && <FichaGrupo titulo="Específico — Rocha Ígnea" campos={[["Índice de cor", item.indiceCorIgnea], ["Classificação", item.classificacaoIgnea]]} />}
+              {item.tipoRocha === "Sedimentar" && <FichaGrupo titulo="Específico — Rocha Sedimentar" campos={[["Tipo sedimentar", item.tipoSedimentar], ["Cimento/matriz", item.cimentoMatriz], ["Selecionamento", item.selecionamento], ["Arredondamento", item.arredondamento], ["Presença de fósseis", item.presencaFosseis]]} />}
+              {item.tipoRocha === "Metamórfica" && <FichaGrupo titulo="Específico — Rocha Metamórfica" campos={[["Tipo de metamorfismo", item.tipoMetamorfismo], ["Grau metamórfico", item.grauMetamorfico], ["Foliação", item.foliacao], ["Rocha original (protólito)", item.rochaOriginal], ["Minerais índice", item.mineraisIndice]]} />}
               <FichaGrupo titulo="Formação" campos={[["Ambiente", item.ambienteFormacao], ["Idade geológica", item.idadeGeologica], ["Origem", item.origem]]} />
               <FichaGrupo titulo="Aplicações" campos={[["Industrial", item.usoIndustrial], ["Ornamental", item.usoOrnamental], ["Construção", item.usoConstrucao]]} />
               <FichaGrupo titulo="Origem" campos={[["Procedência", item.procedencia], ["Município", item.municipio], ["Estado", item.estado], ["País", item.pais]]} />
@@ -1669,6 +1756,7 @@ const S = {
   formGrid2: { display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(220px,1fr))", gap: 14 },
   formGrid3: { display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(170px,1fr))", gap: 14 },
   sectionTitle: { display: "flex", alignItems: "center", gap: 7, fontSize: 11.5, fontWeight: 700, color: "#2E7D5B", textTransform: "uppercase", letterSpacing: 0.5, margin: "22px 0 12px", paddingBottom: 8, borderBottom: "1px solid #E4F2E9" },
+  tipoHint: { display: "flex", alignItems: "center", gap: 8, background: "#FFFCF2", border: "1px solid #e8dcae", color: "#7a5f0a", fontSize: 12, padding: "10px 12px", borderRadius: 9, marginTop: 4 },
 
   photoDrop: { display: "flex", alignItems: "center", gap: 8, border: "1.5px dashed #cfe0d6", borderRadius: 10, padding: "12px 14px", fontSize: 12.5, color: "#5b7768", background: "#FAFCF9" },
   thumbWrap: { position: "relative", width: 60, height: 60 },
