@@ -38,7 +38,7 @@ const AMBIENTE_FORMACAO_IGNEA_OPCOES = ["Plutônica", "Vulcânica"];
 const INDICE_COR_IGNEA = ["Leucocrática (0-33% de máficos)", "Mesocrática (34-64% de máficos)", "Melanocrática (67-90% de máficos)"];
 const SATURACAO_SILICA = ["Ácida (>66% SiO2)", "Intermediária (66-52% SiO2)", "Básica (45-52% SiO2)", "Ultrabásica (<45% SiO2)"];
 // Sedimentar — campos seguindo o "Roteiro para Prática de Descrição de Rochas Sedimentares"
-const GRANULOMETRIA_SED = ["Conglomerado ou brecha (seixos / grãos maiores)", "Arenito (areia)", "Argilito ou siltito (grãos muito finos)"];
+const GRANULOMETRIA_SED = ["Conglomerado ou brecha (eixos / grãos maiores)", "Arenito (areia)", "Argilito ou siltito (grãos muito finos)"];
 const MATERIAL_FORMACAO_SED = ["Clástica (fragmentos de rochas ou minerais)", "Química (maciça, sem grãos visíveis)", "Biogênica (fragmentos de conchas ou restos de animais)"];
 const SELECIONAMENTO_SED = ["Bem selecionada (grãos de tamanho igual)", "Moderadamente selecionada", "Mal selecionada (grãos de tamanhos diferentes)"];
 const ARREDONDAMENTO_SED = ["Bem arredondados", "Angulosos"];
